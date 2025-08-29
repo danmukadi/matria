@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Poppins, Manrope, Open_Sans, Montserrat, Inter, Nunito_Sans, Dancing_Script, Amatic_SC } from "next/font/google";
+import { Poppins, Manrope, Open_Sans, Montserrat, Inter, Nunito_Sans, Dancing_Script, Amatic_SC, Playfair_Display } from "next/font/google";
 import "./globals.css";
 
 const poppins = Poppins({
@@ -23,7 +23,7 @@ const openSans = Open_Sans({
 const montserrat = Montserrat({
   variable: "--font-montserrat",
   subsets: ["latin"],
-  weight: ["700"],
+  weight: ["300", "400", "500", "600", "700"],
 });
 
 const inter = Inter({
@@ -50,6 +50,12 @@ const amaticSC = Amatic_SC({
   weight: ["400", "700"],
 });
 
+const playfairDisplay = Playfair_Display({
+  variable: "--font-playfair-display",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800", "900"],
+});
+
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -65,9 +71,10 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet" />
       </head>
       <body
-        className={`${poppins.variable} ${manrope.variable} ${openSans.variable} ${montserrat.variable} ${inter.variable} ${nunitoSans.variable} ${dancingScript.variable} ${amaticSC.variable} antialiased`}
+        className={`${poppins.variable} ${manrope.variable} ${openSans.variable} ${montserrat.variable} ${inter.variable} ${nunitoSans.variable} ${dancingScript.variable} ${amaticSC.variable} ${playfairDisplay.variable} antialiased`}
       >
         {children}
       </body>

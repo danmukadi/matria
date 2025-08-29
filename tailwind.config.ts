@@ -19,6 +19,22 @@ const config: Config = {
         "dancing-script": ["var(--font-dancing-script)"],
         "amatic-sc": ["var(--font-amatic-sc)"],
         "dm-serif": ["DM Serif Display", "serif"],
+        "playfair-display": ["var(--font-playfair-display)"],
+      },
+      keyframes: {
+        shimmer: {
+          '0%': { transform: 'translateX(-100%)' },
+          '100%': { transform: 'translateX(200%)' },
+        },
+        borderFlow: {
+          '0%': { 'background-position': '0% 50%' },
+          '50%': { 'background-position': '100% 50%' },
+          '100%': { 'background-position': '0% 50%' },
+        },
+        slowPulse: {
+          '0%, 100%': { opacity: '1' },
+          '50%': { opacity: '0.8' },
+        },
       },
     },
   },
