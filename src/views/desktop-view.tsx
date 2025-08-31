@@ -5,69 +5,146 @@ import { useState, useEffect } from "react";
 
 const cardData = [
   {
-    title: "Common Questions",
-    questions: [
-      "Will my insurance cover a midwife?",
-      "Are home births safe?",
-    ]
+    title: "Everything I hoped for!!",
+    rating: 5,
+    review: "Her calm presence helped me stay focused, and she advocated for my birth plan when things got intense."
   },
   {
-    title: "Cost & Insurance",
-    questions: [
-      "How much does a midwife cost?",
-      "What insurance plans cover midwifery care?",
-    ]
+    title: "Felt like having a friend near",
+     rating: 5,
+    review: "The birth went smoothly and she was very encouraging throughout the whole process."
   },
   {
-    title: "Birth Experience",
-    questions: [
-      "Can I still have pain relief?",
-      "What happens in an emergency?",
-    ]
+    title: "Finally someone who I could talk to",
+     rating: 5,
+    review: "She caught a potential issue early and helped me navigate the best options for my baby and me."
   },
   {
-    title: "Finding Care",
-    questions: [
-      "How do I find a midwife near me?",
-      "When should I start looking?",
-    ]
+    title: "Couldn't have done it without Maria",
+     rating: 4,
+    review: " When labor started, she came to my home and labored with me for hours before we went to the birth center. "
+  },
+  {
+    title: "Like a part of the family",
+     rating: 5,
+    review: "She knows my medical history inside and out, remembers details about my family, and somehow manages to make each appointment feel unhurried even though I know she's busy."
   }
 ];
 
+const heroImages = [
+  "/matria-desktop-img1.webp",
+  "/married-couple-talking.webp", 
+  "/newborn.webp",
+  "/rejoice.webp",
+  "/midwife-checkup.webp"
+];
+
+const profileImages = [
+  "/profile/profile1.png",
+  "/profile/profile2.png",
+  "/profile/profile3.png", 
+  "/profile/profile4.png",
+  "/profile/profle5.png"
+];
+
+// iOS Style Loader Component
+const IOSLoader = ({ resetKey }: { resetKey: number }) => {
+  return (
+    <div className="relative w-6 h-6">
+      {/* Background ring */}
+      <svg 
+        className="w-full h-full -rotate-90" 
+        viewBox="0 0 60 60"
+      >
+        <circle
+          cx="30"
+          cy="30"
+          r="25"
+          stroke="rgba(255, 255, 255, 0.2)"
+          strokeWidth="6"
+          fill="none"
+        />
+        {/* Progress ring */}
+        <circle
+          key={resetKey}
+          cx="30"
+          cy="30"
+          r="25"
+          stroke="white"
+          strokeWidth="6"
+          fill="none"
+          strokeLinecap="round"
+          strokeDasharray="157.08" /* 2 * π * 25 */
+          strokeDashoffset="157.08"
+          className="loader-ring"
+        />
+      </svg>
+    </div>
+  );
+};
+
 export default function DesktopView() {
   const [currentCard, setCurrentCard] = useState(0);
-  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [currentImage, setCurrentImage] = useState(0);
   const [emailValue, setEmailValue] = useState("");
   const [emailError, setEmailError] = useState("");
+  const [showThankYouModal, setShowThankYouModal] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentCard((prev) => (prev + 1) % cardData.length);
-    }, 5000);
+      setCurrentImage((prev) => (prev + 1) % heroImages.length);
+    }, 10000);
 
     return () => clearInterval(interval);
   }, []);
 
   const isValidEmail = (email: string) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
+    const trimmedEmail = email.trim().toLowerCase();
+    if (trimmedEmail.length > 254) return false;
+    const emailRegex = /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/;
+    return emailRegex.test(trimmedEmail);
   };
 
-  const handleJoinWaitlist = () => {
-    if (!emailValue) {
+  const handleJoinWaitlist = async () => {
+    const trimmedEmail = emailValue.trim();
+    setIsLoading(true);
+    if (!trimmedEmail) {
       setEmailError("Please enter your email address");
+      setIsLoading(false);
       return;
     }
-    
-    if (!isValidEmail(emailValue)) {
+    if (!isValidEmail(trimmedEmail)) {
       setEmailError("Please enter a valid email address");
+      setIsLoading(false);
       return;
     }
-    
     setEmailError("");
-    // Handle successful email submission here
-    console.log("Valid email submitted:", emailValue);
+    try {
+      const response = await fetch('/api/waitlist', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: trimmedEmail }),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setShowThankYouModal(true);
+        setEmailValue("");
+      } else {
+        setEmailError(data.error || 'Failed to join waitlist');
+      }
+    } catch (error) {
+      console.error('Error joining waitlist:', error);
+      setEmailError('Network error. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+
   return (
     <div className="flex relative min-h-screen h-screen bg-gradient-to-r from-[#FAF0F0] to-white">
       <div className="h-[3rem] w-full absolute bottom-0 bg-[#f2cdce]"></div>
@@ -87,7 +164,7 @@ export default function DesktopView() {
             <h1 className="text-5xl leading-tight text-gray-900" style={{fontFamily: 'DM Serif Display, serif'}}>
   Don't let  <span className="text-[#fd526b] underline decoration-dotted decoration-[#fd526b] decoration-5 underline-offset-4">bad healthcare</span> decide 
   <span className="inline-flex items-center gap-2">
-    <div className="w-12 h-12 flex-shrink-0 border border-3 border-white rounded-md">
+    <div className="w-12 h-12 flex-shrink-0 border border-3 border-white rounded-md -rotate-7">
       <img src="/midwife-inline.png" alt="" className="w-full h-full rounded-md object-cover" />
     </div>
     how you
@@ -107,15 +184,15 @@ export default function DesktopView() {
         </p>
 
          <p className="font-manrope text-[1rem] py-10 font-normal leading-relaxed text-gray-700 max-w-2xl">
-Tired of doctors who don't know your name? <strong className="text-black font-bold">Connecticut has midwives who actually care about you as a person, not just another appointment.</strong> These women will sit with you for hours, answer your calls at 3am, and remember that you're scared of needles and this is your first baby. They cost way less than hospitals too.
+Tired of doctors who don't know your name? <strong className="text-black font-bold">Connecticut has midwives who actually care about you as a person, not just another appointment.</strong><br /><br /> These women will sit with you for hours, answer your calls at 3am, and remember that you're scared of needles and this is your first baby. They cost way less than hospitals too.
 Birth doesn't have to be scary or impersonal. You deserve someone who treats you like family, not a medical chart. <strong className="text-black">Find a midwife who gets it.</strong>       
 </p>
 
         <div className="mt-5">
-          <p className="font-manrope text-[0.9rem] mb-4 text-gray-700">
-            Get early access to our midwife directory
-          </p>
-          <div className="flex gap-4 max-w-xl">
+         <p className="font-manrope text-[0.9rem] mb-4 text-gray-700">
+              Get early access to our midwife directory. <strong>Verify your email for higher priority access when we launch!</strong>
+            </p>
+          <div className="flex gap-4 max-w-2xl">
             <input
               type="email"
               placeholder="Enter your email"
@@ -163,12 +240,18 @@ Birth doesn't have to be scary or impersonal. You deserve someone who treats you
         </div>
       </div>
       <div className="w-1/2 h-screen relative">
-        <Image
-          src="/matria-desktop-img1.webp"
-          alt="Matria"
-          fill
-          className="rounded-tl-4xl object-cover"
-        />
+        <div className="h-[3rem] w-full absolute bottom-0 bg-[#564147] z-10"></div>
+        {heroImages.map((src, index) => (
+          <Image
+            key={src}
+            src={src}
+            alt="Matria"
+            fill
+            className={`rounded-tl-4xl object-cover transition-opacity duration-1000 absolute inset-0 ${
+              index === currentImage ? 'opacity-100' : 'opacity-0'
+            }`}
+          />
+        ))}
         
         {/* Glass card overlay */}
         <div className="absolute bottom-30 left-1/2 transform -translate-x-1/2">
@@ -192,35 +275,140 @@ Birth doesn't have to be scary or impersonal. You deserve someone who treats you
                   {cardData[(currentCard + 1) % cardData.length].title}
                 </h3>
                 <p className="font-open-sans text-sm leading-relaxed">
-                  {cardData[(currentCard + 1) % cardData.length].questions.map((question, index) => (
-                    <span key={index}>
-                      "{question}"
-                      {index < cardData[(currentCard + 1) % cardData.length].questions.length - 1 && <><br /></>}
-                    </span>
-                  ))}
+                  "{cardData[(currentCard + 1) % cardData.length].review}"
                 </p>
               </div>
             </div>
 
             {/* Main card */}
-            <div className="relative bg-black/40 backdrop-blur-xl border border-white/20 rounded-2xl p-6 w-[35rem] shadow-xl transition-all duration-500">
+            <div className="flex flex-col items-center justify-center relative bg-black/10 backdrop-blur-xl rounded-2xl px-25 py-5 w-[40rem] transition-all duration-500">
+              {/* Card Counter and Loader */}
+              <div className="absolute top-[20px] right-7 flex items-center gap-2">
+                <span className="text-white/70 text-sm font-manrope">
+                  {currentCard + 1}/{cardData.length}
+                </span>
+                <IOSLoader resetKey={currentCard} />
+              </div>
+              
               <div className="text-white">
-                <h3 className="font-manrope font-medium text-lg mb-3">
-                  {cardData[currentCard].title}
-                </h3>
-                <p className="font-open-sans text-sm leading-relaxed">
-                  {cardData[currentCard].questions.map((question, index) => (
-                    <span key={index}>
-                      "{question}"
-                      {index < cardData[currentCard].questions.length - 1 && <><br /></>}
-                    </span>
-                  ))}
+                 <Image
+                    src={profileImages[currentCard]}
+                    alt="profile"
+                    width={75}
+                    height={75}
+                    className="rounded-xl object-cover border border-white border-2 absolute -top-[20px] left-0 -rotate-10"
+                  />
+                  <div className="flex flex-col">
+                     <h3 className="font-dancing-script font-bold text-[1.7rem] italic">
+                    {cardData[currentCard].title}
+                  </h3>
+              
+                <p className="font-manrope text-gray-200 text-md leading-relaxed">
+                  {cardData[currentCard].review}
                 </p>
+                  </div>
+              </div>
+              {/* Star Rating */}
+              <div className="absolute bottom-3 right-4 flex">
+                {[...Array(5)].map((_, index) => (
+                  <i 
+                    key={index}
+                    className={`bx ${index < cardData[currentCard].rating ? 'bxs-star' : 'bx-star'} text-[#7fd1ae] text-xl`}
+                  />
+                ))}
               </div>
             </div>
           </div>
         </div>
       </div>
+      
+      {/* Thank You Modal */}
+      {showThankYouModal && (
+        <div className="fixed inset-0 bg-black/15 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-8 max-w-[40rem] w-full mx-4 relative">
+            {/* Close button */}
+            <button
+              onClick={() => setShowThankYouModal(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <i className="bx bx-x text-2xl"></i>
+            </button>
+            
+            {/* Success content */}
+            <div className="text-center">
+              <div className="flex items-center justify-center mx-auto mb-6">
+                 <Image
+                    src="/matria-title-logo.svg"
+                    alt="mawa"
+                    width={150}
+                    height={150}
+                    className="rounded-tl-4xl object-cover"
+                  />
+              </div>
+              
+              <h2 className="text-4xl font-bold text-gray-900 mb-3" style={{ fontFamily: 'DM Serif Display, serif' }}>
+                You're on the Waitlist!
+              </h2>
+              <p className="text-gray-600 font-manrope mb-6 text-md">
+                Check your email (including spam/junk) for a verification link. <strong>Click it to get higher priority access</strong> when we launch in Connecticut!
+              </p>
+              <div className="bg-[#7fd1ae]/10 border border-[#7fd1ae]/20 rounded-lg p-4 mb-6">
+                <p className="text-sm text-gray-700 font-manrope">
+                  <strong>What's next?</strong> Verify your email to secure your spot at the top of the list. We'll notify you with updates about midwives in your area and our upcoming launch.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-1">
+                <div className="w-[7rem] h-[12rem] rounded-full overflow-hidden">
+                  <Image
+                    src={heroImages[0]}
+                    alt="Matria"
+                    width={112}
+                    height={192}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div className="w-[7rem] h-[12rem] rounded-full overflow-hidden">
+                  <Image
+                    src={heroImages[1]}
+                    alt="Matria"
+                    width={112}
+                    height={192}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div className="w-[7rem] h-[12rem] rounded-full overflow-hidden">
+                  <Image
+                    src={heroImages[2]}
+                    alt="Matria"
+                    width={112}
+                    height={192}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div className="w-[7rem] h-[12rem] rounded-full overflow-hidden">
+                  <Image
+                    src={heroImages[3]}
+                    alt="Matria"
+                    width={112}
+                    height={192}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div className="w-[7rem] h-[12rem] rounded-full overflow-hidden">
+                  <Image
+                    src={heroImages[4]}
+                    alt="Matria"
+                    width={112}
+                    height={192}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
