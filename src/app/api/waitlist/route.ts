@@ -1,5 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
+import { Resend } from 'resend';
+
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+function generateVerificationToken(): string {
+  return Math.random().toString(36).substring(2) + Date.now().toString(36);
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -25,24 +32,30 @@ export async function POST(request: NextRequest) {
     }
 
     // Additional checks for common issues
-    if (email.includes('..') || // consecutive dots
-        email.startsWith('.') || 
-        email.endsWith('.') ||
-        email.includes('@.') || // dot immediately after @
-        email.includes('.@') || // dot immediately before @
-        email.length > 254 ||   // RFC maximum length
-        email.split('@').length !== 2) { // must have exactly one @
+    if (email.includes('..') || email.startsWith('.') || email.endsWith('.') ||
+        email.includes('@.') || email.includes('.@') || email.length > 254 ||
+        email.split('@').length !== 2) {
       return NextResponse.json(
         { error: 'Invalid email format' },
         { status: 400 }
       );
     }
 
-    // Insert email into waitlist_emails table
-    // UNIQUE constraint will prevent duplicates automatically
+    // Generate verification token and expiry
+    const verificationToken = generateVerificationToken();
+    const tokenExpiresAt = new Date();
+    tokenExpiresAt.setHours(tokenExpiresAt.getHours() + 24); // 24 hour expiry
+
+    // Insert email into waitlist_emails table with verification token
     const { data, error } = await supabase
       .from('waitlist_emails')
-      .insert([{ email: email }]);
+      .insert([{ 
+        email: email,
+        verification_token: verificationToken,
+        token_expires_at: tokenExpiresAt.toISOString()
+      }])
+      .select()
+      .single();
 
     if (error) {
       console.error('Supabase insert error:', error);
@@ -61,12 +74,46 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log('New waitlist signup:', email);
+    // Send verification email
+    const verificationUrl = `${process.env.NEXT_PUBLIC_APP_URL}/verify?token=${verificationToken}`;
+    
+    try {
+      await resend.emails.send({
+        from: 'Matria <noreply@matria.com>', // Replace with your verified domain
+        to: [email],
+        subject: 'Verify your email - Matria Waitlist',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #7fd1ae;">Welcome to Matria!</h2>
+            <p>Thank you for joining our waitlist. We're excited to help you find midwives who truly care about you and your birth experience.</p>
+            
+            <p><strong>Please verify your email address to secure your priority spot:</strong></p>
+            
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${verificationUrl}" style="background-color: #7fd1ae; color: white; padding: 12px 24px; text-decoration: none; border-radius: 25px; font-weight: bold;">Verify Email & Get Priority Access</a>
+            </div>
+            
+            <p style="color: #666; font-size: 14px;">This link expires in 24 hours. If you didn't sign up for Matria, you can safely ignore this email.</p>
+            
+            <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
+            <p style="color: #999; font-size: 12px;">
+              Matria - Connecting Connecticut families with caring midwives<br>
+              Part of the Mawa Initiative
+            </p>
+          </div>
+        `,
+      });
+
+      console.log('Verification email sent to:', email);
+    } catch (emailError) {
+      console.error('Failed to send verification email:', emailError);
+      // Don't fail the signup if email fails - user is still in database
+    }
 
     return NextResponse.json(
       { 
         success: true, 
-        message: 'Successfully joined waitlist',
+        message: 'Please check your email to verify your address',
         email: email 
       },
       { status: 201 }
