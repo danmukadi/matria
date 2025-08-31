@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
     
     try {
       await resend.emails.send({
-        from: 'Matria <noreply@matria.com>', // Replace with your verified domain
+        from: 'Matria <noreply@matria.us>',
         to: [email],
         subject: 'Verify your email - Matria Waitlist',
         html: `
